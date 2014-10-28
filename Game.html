@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+
+	<title>Doom Cake Bakery</title>
+
+	<style>
+	canvas {
+		display: block;
+		position: absolute;
+		margin: auto;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+	}
+	</style>
+</head>
+<body>
+
+<script>
+
+/*************************
+***Source Index Mapping***
+**************************/
+/*
+	1. Global Variable ([1]Global)
+	2. Main Game Objects ([2]Main)
+		2a. Restaurant ([2a]Restaurant)
+			- Restaurant class + prototype
+		2b. In-game ([2b]In-game)
+			- Wall Tile - Wallpaper object
+			- Wall Object - Objects attach to wall
+			- Floor Tile - Tile for floor
+			- Floor Object - Object on top of the floors
+			- NPC - things that move
+		2c. Graphic ([2c]Graphic)
+			- Sprite - the main object for drawing
+	3. Main function/ Code - the part that run the game ([3]The)
+*/
+
+/*******************************
+***[1]Global Variable Go Here***
+********************************/
+
+	var ScreenWidth = 1028; //Predefined Screen Size
+	var ScreenHeight = 768; // ^
+	
+	var TileSizeX = 124; //Individual actual size X
+	var TileSizeY = 62; // ^ but Y
+	
+	var MapWidth = 2604; // The maximum scrolling for camera
+	var MapHeight = 1736; //^
+    
+	var FloorTexture = []; // List IMAGE FILE for floor tile
+	var FloorTileList = []; // List of FLOORTILE OBJECT
+	
+	var WallTexture = []; // List IMAGE FILE for wallpaper
+	var WallTileList = []; // List of WALLPAPER OBJECT
+	
+	var WallObjectTexture = []; // List IMAGE FILE for wall object
+	var WallObjectList = []; // List of WALL OBJECT
+	
+	var FloorObjectTexture = []; // List IMAGE FILE for wall object
+	var FloorObjectList = []; // List of WALL OBJECT
+	
+	var EyesTexture = []; // List IMAGE FILE for eyes
+	var EyesList = []; // List of EYES OBJECT
+	
+	var MouthTexture = []; // List IMAGE FILE for mouth
+	var MouthList = []; // List of MOUTH OBJECT
+	
+	var BodyTexture = []; // List IMAGE FILE for Body
+	var BodyList = []; // List of Body Object
+	
+	var HairTexture = []; // List IMAGE FILE for hair
+	var HairList = []; // List of HAIR OBJECT
+	
+	var TopTexture = []; // List IMAGE FILE for top
+	var TopList = []; // List of TOP (clothing) OBJECT
+	
+	var BottomTexture = []; // List IMAGE FILE for bottom
+	var BottomList = []; // List of FACE OBJECT
+	
+	var DressTexture = []; // List IMAGE FILE for dress
+	var DressList = []; // List of DRESS OBJECT
+	
+	var GUIButtonTexture = []; // List of IMAGE FILE for GUIBUTTON
+	var GUITexture = []; // Same as above but GUI specific
+    
+	var GameState = []; //List of Game State
+	var CurState; //List of state
+	
+	//Mouse Position/Clicking and stuffs
+	var MouseX;
+	var MouseY;
+	var Dragging;
+	
+
+/********************************
+***[2]Main Game Object Classes***
+*********************************/
+	// [2a]Restaurant Classes
+	
+    function Restaurant() {
+        this.Name = "";
+        this.FloorTexture = [[]];
+        this.FloorObject = [[]];
+		this.FloorObjectList = [];
+        this.WallTextureX = [];
+		this.WallTextureY = [];
+        this.WallObjectX = [];
+		this.WallObjectY = [];
+		this.ExpandedX = 3;
+		this.ExpandedY = 3;
+		this.StartSizeX = 6;
+		this.StartSizeY = 6;
+    }
+
+    Restaurant.prototype.Init = function () {
+        this.FloorTexture = [[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+							[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+		
+		this.WallTextureX = [new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0)];
+		this.WallTextureY = [new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0), new SpawnWallTile(0)];
+		
+		this.WallObjectX = [null, null, null, new SpawnDoorObject(0, true), null, null, null, null, null, null, null, null, null, null, null, null];
+		this.WallObjectY = [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+	};
+	
+	Restaurant.prototype.ExpandX = function(){
+		if (ExpandedX + 1 < 11)
+			ExpandedX++;
+	};
+	
+	Restaurant.prototype.ExpandY = function(){
+		if (ExpandedY + 1 < 11)
+			ExpandedY++;
+	};
+
+
+    Restaurant.prototype.draw = function (ctx) {
+       
+	   // Draw Grasses
+	   
+	   for (var y = 0; y < 18; y++) {
+            for (var x = 0; x < 18; x++) {
+				var DrawX = (x - y) * TileSizeX / 2 + 1439;
+				var DrawY = (x + y) * TileSizeY / 2 + 599;
+				
+				FloorTileList[0].draw(ctx, DrawX, DrawY);
+            }
+        }
+		
+		// Draw the Restaurant
+		
+		for (var y = 0; y < this.StartSizeX + this.ExpandedX; y++) {
+            for (var x = 0; x < this.StartSizeY + this.ExpandedY; x++) {
+				var DrawX = (x - y) * TileSizeX / 2 + 1439;
+				var DrawY = (x + y) * TileSizeY / 2 + 661;
+				
+				FloorTileList[this.FloorTexture[y][x]].draw(ctx, DrawX, DrawY);
+            }
+        }
+		
+		// Draw The Wall
+		
+		var wallconnector = new SpawnWallTile(1);
+		wallconnector.draw(ctx, 1492, 511, true);
+		
+		for (var w = 0; w < this.StartSizeX + this.ExpandedX; w++){
+			if (this.WallObjectX[w] instanceof SpawnDoorObject){
+				continue;
+			}
+			this.WallTextureX[w].draw(ctx, 1501 + (w * TileSizeX / 2), 630 - 128 + (w  * TileSizeY / 2), true);
+		}
+		
+		for (var w = 0; w < this.StartSizeY + this.ExpandedY; w++){
+			if (this.WallObjectY[w] instanceof SpawnDoorObject){
+				continue;
+			}
+			this.WallTextureY[w].draw(ctx, 1377 - (w * TileSizeX / 2), 630 - 128 + (w * TileSizeY / 2), false);
+		}
+		
+		for (var w = 0; w < this.StartSizeX + this.ExpandedX; w++){
+			if (this.WallObjectX[w] != null && this.WallObjectX[w] != 'undefined'){
+				this.WallObjectX[w].draw(ctx, 1501 + (w * TileSizeX / 2), 630 - 128 + (w  * TileSizeY / 2), true);
+			}
+		}
+		
+		for (var w = 0; w < this.StartSizeY + this.ExpandedY; w++){
+			if (this.WallObjectY[w] != null && this.WallObjectY[w] != 'undefined'){
+				this.WallObjectY[w].draw(ctx, 1377 - (w * TileSizeX / 2), 630 - 128 + (w * TileSizeY / 2), false);
+			}
+		}
+		
+		// Draw the end wall
+		wallconnector = new SpawnWallTile(2);
+		for (var w = 0; w < this.StartSizeX + this.ExpandedX; w++){
+			wallconnector.draw(ctx, 447 + (w * TileSizeX / 2) + (10 - this.ExpandedX) * (TileSizeX / 2), 1093 + (w  * TileSizeY / 2) - (10 - this.ExpandedX) * (TileSizeY / 2), true);
+		}
+		for (var w = 0; w < this.StartSizeY + this.ExpandedY; w++){
+			wallconnector.draw(ctx, 2431 - (w * TileSizeX / 2) - (10 - this.ExpandedY) * (TileSizeX / 2), 1093 + (w * TileSizeY / 2) - (10 - this.ExpandedY) * (TileSizeY / 2), false);
+		}
+    };
+
+    var MyRestaurant = new Restaurant();
+    MyRestaurant.Init();
+	
+	// [2b]In-game Object classes goes here
+		
+		// [2ba]Wallpaper
+		function WallTile(idx, idy) {
+			this.IDX = idx;
+			this.IDY = idy;
+		};
+
+		function SpawnWallTile(id){
+			this.ID = id;
+		}
+		
+		SpawnWallTile.prototype.draw = function (ctx, x, y, isX) {
+			WallTexture[(isX) ? WallTileList[this.ID].IDX : WallTileList[this.ID].IDY].draw(ctx, x, y, true);
+		};
+
+		// [2bb]Wall Object
+		function WallObject(idx, idy) {
+			this.IDX = idx;
+			this.IDY = idy;
+		};
+		
+		function DoorObject(idx, idy, openidx, openidy){
+			this.IDX = idx;
+			this.IDY = idy;
+			this.OpenIDX = openidx;
+			this.OpenIDY = openidy;
+		};
+
+		function SpawnWallObject(id){
+			this.ID = id;
+		}
+		
+		SpawnWallObject.prototype.draw = function (ctx, x, y, isX) {
+			WallObjectTexture[(isX) ? WallObjectList[this.ID].IDX : WallObjectList[this.ID].IDY].draw(ctx, x, y, true);
+		};
+		
+		function SpawnDoorObject(id, open){
+			SpawnWallObject.call(this, id);
+			
+			this.isOpen = open;
+		};
+		
+		SpawnDoorObject.prototype.draw = function (ctx, x, y, isX) {
+			var s = 0;
+				switch (isX){
+					case true:
+						s = (this.isOpen) ? WallObjectList[this.ID].OpenIDX : WallObjectList[this.ID].IDX;
+						break;
+					case false:
+						s = (this.isOpen) ? WallObjectList[this.ID].OpenIDY : WallObjectList[this.ID].IDY;
+						break;
+				}
+				WallObjectTexture[s].draw(ctx, x, y, true);
+		};
+
+
+		// [2bc]Floor Tile
+
+		function FloorTile(id) {
+			this.ID = id;
+		};
+	
+		FloorTile.prototype.draw = function (ctx, x, y) {
+			FloorTexture[this.ID].draw(ctx, x, y, true);
+		};
+
+		//[2bd]Floor Object
+		function FloorObject(id, sizex, sizey, objectype) {
+			this.ID = id;
+			this.SizeX = sizex;
+			this.SizeY = sizey;
+		};
+		
+		FloorObject.prototype.draw = function (ctx, x, y) {
+			
+		}
+		
+		FloorObject.prototype.do = function(){
+			
+		};
+		
+		// [2be]NPC
+		
+		
+		
+		function SpriteBody(id){
+			this.ID = id;
+		}
+		
+		function SpriteTop(id){
+			this.ID = id;
+		}
+		
+		function NPC(spritehair, spritebody, spriteface, spritetop, spritebot, type, spriteskin){
+			this.SpriteHair = spritehair;
+			this.SpriteBody = spritebody;
+			this.SpriteFace = spriteface;
+			this.SpriteTop = spritetop;
+			this.SpriteBot = spritebot;
+			this.NPCType = type;
+			this.SpriteSkin = spriteskin;
+			
+			this.Dir = 0;
+			this.isWalking = true;
+			this.Job = 0;
+			this.X = 2;
+			this.Y = 1;
+			this.WalkFrame = 0;
+			this.State = 0;
+		}
+		
+		NPC.prototype.draw = function(ctx){
+			var DrawX = (this.X - this.Y) * TileSizeX / 2 + 1439;
+			var DrawY = (this.X + this.Y) * TileSizeY / 2 + 533;
+			
+			var posX = 128;
+			var posY = 0;
+			if (this.isWalking){
+				if (this.WalkFrame >= 0 && this.WalkFrame < 12){
+					posX = 128;
+				}
+				else if (this.WalkFrame >= 12 && this.WalkFrame < 42){
+					posX = 0;
+				}
+				else if (this.WalkFrame >= 42 && this.WalkFrame < 54){
+					posX = 128;
+				}
+				else if (this.WalkFrame >= 54 && this.WalkFrame < 84){
+					posX = 256;
+				}
+				else if (this.WalkFrame >= 84 && this.WalkFrame < 96){
+					posX = 128;
+				}
+				
+				switch (this.Dir){
+					case 0:
+						posY = 0;
+						DrawX -= this.WalkFrame / 96 * 62;
+						DrawY -= this.WalkFrame / 96 * 31 ;
+						break;
+					case 1:
+						posY = 192;
+						DrawX += this.WalkFrame / 96 * 62;
+						DrawY -= this.WalkFrame / 96 * 31;
+						break;
+					case 2:
+						posY = 384;
+						DrawX -= this.WalkFrame / 96 * 62;
+						DrawY += this.WalkFrame / 96 * 31;
+						break;
+					case 3:
+						posY = 576;
+						DrawX += this.WalkFrame  / 96 * 62;
+						DrawY += this.WalkFrame  / 96 * 31;
+						break;
+				}
+			}
+			else{
+				switch (this.Dir){
+					case 0:
+						posY = 0;
+						break;
+					case 1:
+						posY = 192;
+						break;
+					case 2:
+						posY = 384;
+						break;
+					case 3:
+						posY = 576;
+						break;
+				}
+			}
+			BodyTexture[BodyList[this.SpriteBody].ID].drawWithClip(ctx, DrawX, DrawY, true, posX, posY, 128, 192);
+			TopTexture[TopList[this.SpriteTop].ID].drawWithClip(ctx, DrawX, DrawY, true, posX, posY, 128, 192);
+		}
+		
+		NPC.prototype.Walk = function(dir){
+		
+		}
+		
+		NPC.prototype.update = function(){
+			if (this.isWalking){
+				this.WalkFrame++;
+				if (this.WalkFrame > 96){
+					this.WalkFrame = 0;
+					this.isWalking = false;
+					switch (this.Dir){
+						case 0:
+							this.X--;
+							break;
+						case 1:
+							this.Y--;
+							break;
+						case 2:
+							this.Y++;
+							break;
+						case 3:
+							this.X++;
+							break;
+					}
+				}
+			}
+			else{
+				var proper = false;
+				var random = 0;
+				while(proper == false){
+					random = Math.floor((Math.random() * 4));
+					if (random == 0){
+						if (this.X > 0){
+							proper = true;
+						}
+					}
+					if (random == 1){
+						if (this.Y > 0){
+							proper = true;
+						}
+					}
+					if (random == 2){
+						if (this.Y < 15){
+							proper = true;
+						}
+					}
+					if (random == 3){
+						if (this.Y < 15){
+							proper = true;
+						}
+					}
+				}
+				this.Dir = random;
+				this.isWalking = true;
+			}
+		}
+		
+		var Test = new NPC(0, 0, 0, 0, 0, 0, 0);
+		
+		function NPCManager(){
+			this.NPCList = [];
+		}
+		
+		NPCManager.prototype.update = function(){
+		
+		}
+		
+		NPCManager.prototype.DrawOutside = function(ctx){
+			for (var i = 0; i < this.NPCList.length; i++){
+				if (!this.NPCList[i].State == 0){
+					this.NPCList[i].draw(ctx);
+				}
+			}
+		}
+		
+		NPCManager.prototype.DrawInsideside = function(ctx){
+			for (var i = 0; i < this.NPCList.length; i++){
+				if (this.NPCList[i].State == 1){
+					this.NPCList[i].draw(ctx);
+				}
+			}
+		}
+		
+	// [2bf] GUIs Objects
+	function GUI(id, x, y, wid, hei){
+		this.ID = id;
+		this.X = x;
+		this.Y = y;
+		this.Width = wid;
+		this.Height = hei;
+		this.Visibility = false;
+		
+		this.ButtonList = [];
+	}
+	
+	GUI.prototype.draw = function(ctx){
+		GUITexture[this.ID].draw(ctx, this.X, this.Y, false);
+	}
+	
+	GUI.prototype.clicked = function(){
+		
+	}
+	
+	GUI.prototype.init = function(){
+	}
+	
+	function GUIButton(id, x, y, wid, hei){
+		this.ID = id;
+		this.X = x;
+		this.Y = y;
+		this.Width = wid;
+		this.Height = hei;
+		this.Visibility = false;
+	}
+	
+	GUIButton.prototype.init = function(){
+	}
+	
+	GUIButton.prototype.draw = function(ctx){
+		GUIButtonTexture[this.ID].draw(ctx, this.X, this.Y, false);
+	}
+	
+	GUIButton.prototype.clicked = function(){
+		
+	}
+	
+	// [2c]Graphic Specific
+
+    function Sprite(img, x, y, width, height) {
+        this.img = img;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    };
+	
+    Sprite.prototype.draw = function (ctx, x, y, camaffect) {
+		
+		var offsetX = (camaffect) ? GameCamera.StartX : 0;
+		var offsetY = (camaffect) ? GameCamera.StartY : 0;
+		
+        ctx.drawImage(this.img, this.x, this.y, this.width, this.height,
+		x - offsetX, y - offsetY, this.width, this.height);
+    };
+	
+	Sprite.prototype.drawToScale = function(ctx, x, y, camaffect, dw, dh){
+		var offsetX = (camaffect) ? GameCamera.StartX : 0;
+		var offsetY = (camaffect) ? GameCamera.StartY : 0;
+		
+		ctx.drawImage(this.img, this.x, this.y, this.width, this.height,
+		x - offsetX, y - offsetY, dw, dh);
+	}
+	
+	Sprite.prototype.drawWithClip = function(ctx, x, y, camaffect, clipx, clipy, wid, hei){
+		var offsetX = (camaffect) ? GameCamera.StartX : 0;
+		var offsetY = (camaffect) ? GameCamera.StartY : 0;
+		
+        ctx.drawImage(this.img, clipx, clipy, wid, hei,
+		x - offsetX, y - offsetY, wid, hei);
+	}
+
+	var GameCamera = {
+		StartX: 500, 
+		StartY: 500,
+		OldStartX: 500,
+		OldStartY: 500
+	};
+	
+	
+	// [2d] Background Class
+	
+	function Background(){
+		this.BackgroundImage = [];
+		this.FountainFrame = 0;
+		this.FountainCooldown = 0;
+		this.PumkinFireCooldown = 0;
+		this.PumkinFireFrame = 0;
+		this.PumpkinLightRadius = 10;
+		this.PumpkinLightCooldown = 0;
+		this.MaleWaiterEyes = 0;
+		this.MaleWaiterEyesCooldown = 0;
+		this.FemaleWaiterEyes = 0;
+		this.FemaleWaiterEyesCooldown = 0;
+	}
+	
+	Background.prototype.loadImage = function (name, wid, hei) {
+		var img = new Image();
+		img.src = name;
+		this.BackgroundImage.push(new Sprite(img, 0, 0, wid, hei));
+	};
+	
+	Background.prototype.init = function () {
+		/*this.loadImage("http://i.imgur.com/5FTzfTO.png", 2604, 1736);
+		this.loadImage("http://i.imgur.com/ORH65YW.png", 227, 283);
+		this.loadImage("http://i.imgur.com/wgqmeQ8.png", 227, 283);
+		this.loadImage("http://i.imgur.com/KeXzQrd.png", 227, 283);
+		this.loadImage("http://i.imgur.com/aYQjLXo.png", 227, 283);
+		this.loadImage("http://i.imgur.com/WxBNTS6.png", 1200, 746);
+		this.loadImage("http://i.imgur.com/EIjdLi6.png", 1200, 746);*/
+		
+		this.loadImage("Resource/Background terrain.png", 2604, 1736);
+		this.loadImage("Resource/Background Fountain No Water.png", 227, 283);
+		this.loadImage("Resource/Fountain Water 1.png", 227, 283);
+		this.loadImage("Resource/Fountain Water 2.png", 227, 283);
+		this.loadImage("Resource/Fountain Water 3.png", 227, 283);
+		this.loadImage("Resource/Hotel Base.png", 1200, 746);
+		this.loadImage("Resource/Hotel Over.png", 1200, 746);
+		this.loadImage("Resource/MainMenuBackground.png", 1280, 942);
+		this.loadImage("Resource/MainMenuPumkinFire1.png", 81, 94);
+		this.loadImage("Resource/MainMenuPumkinFire2.png", 81, 94);
+		this.loadImage("Resource/MainMenuPumkinFire3.png", 81, 94);
+		this.loadImage("Resource/MainMenuPumkinFire4.png", 81, 94);
+		this.loadImage("Resource/LightEmittionPumpkinFire.png", 100, 100);
+		this.loadImage("Resource/MaleWaiterBackgroundEyes1.png", 93, 58);
+		this.loadImage("Resource/MaleWaiterBackgroundEyes2.png", 93, 58);
+		this.loadImage("Resource/FemaleWaiterEyes1.png", 107, 53);
+		this.loadImage("Resource/FemaleWaiterEyes2.png", 107, 53);
+	};
+	
+	Background.prototype.update = function(){
+		this.FountainCooldown--;
+		if (this.FountainCooldown < 0){
+			this.FountainCooldown = 20;
+			this.FountainFrame++;
+			if (this.FountainFrame > 2){
+				this.FountainFrame = 0;
+			}
+		}
+		
+		this.PumkinFireCooldown--;
+		if (this.PumkinFireCooldown < 0){
+			this.PumkinFireCooldown = 12;
+			this.PumkinFireFrame++;
+			if (this.PumkinFireFrame > 3){
+				this.PumkinFireFrame = 0;
+			}
+		}
+		
+		this.PumpkinLightCooldown--;
+		if (this.PumpkinLightCooldown < 0){
+			this.PumpkinLightCooldown = 12;
+			this.PumpkinLightRadius = Math.floor(((Math.random() * 6) + 2) * 16);
+		}
+		
+		this.MaleWaiterEyesCooldown--;
+		if (this.MaleWaiterEyesCooldown < 0){
+			if (this.MaleWaiterEyes == 0){
+				this.MaleWaiterEyesCooldown = 20;
+				var mcloseeye = Math.floor(Math.random() * 4);
+				if (mcloseeye == 1){
+					this.MaleWaiterEyes = 1;
+				}
+			}
+			else if (this.MaleWaiterEyes == 1){
+				this.MaleWaiterEyesCooldown = 60;
+				this.MaleWaiterEyes = 0;
+			}
+		}
+		
+		this.FemaleWaiterEyesCooldown--;
+		if (this.FemaleWaiterEyesCooldown < 0){
+			if (this.FemaleWaiterEyes == 0){
+				this.FemaleWaiterEyesCooldown = 20;
+				var fcloseeye = Math.floor(Math.random() * 4);
+				if (fcloseeye == 3){
+					this.FemaleWaiterEyes = 1;
+				}
+			}
+			else if (this.FemaleWaiterEyes == 1){
+				this.FemaleWaiterEyesCooldown = 60;
+				this.FemaleWaiterEyes = 0;
+			}
+		}
+	}
+	
+	Background.prototype.drawMainMenu = function (ctx) {
+		this.BackgroundImage[7].drawToScale(ctx, 0, 0, false, ScreenWidth, ScreenHeight);
+		this.BackgroundImage[13 + this.MaleWaiterEyes].drawToScale(ctx, ScreenWidth * 521 / 1280, ScreenHeight * 383 / 942, false, ScreenWidth * 93 / 1280, ScreenHeight * 58 / 942);
+		this.BackgroundImage[15 + this.FemaleWaiterEyes].drawToScale(ctx, ScreenWidth * 254 / 1280, ScreenHeight * 788 / 942, false, ScreenWidth * 107 / 1280, ScreenHeight * 53 / 942);
+		this.BackgroundImage[8 + this.PumkinFireFrame].drawToScale(ctx, ScreenWidth * 615 / 1280, ScreenHeight * 618 / 942, false, ScreenWidth * 81 / 1280, ScreenHeight * 94 / 942);
+		this.BackgroundImage[12].drawToScale(ctx, ScreenWidth * (615 - this.PumpkinLightRadius / 2) / 1280, ScreenHeight * (618 - this.PumpkinLightRadius / 2) / 942, false, ScreenWidth * (100 + this.PumpkinLightRadius) / 1280, ScreenHeight * (100 + this.PumpkinLightRadius) / 942);
+		//ctx, x, y, camaffect, dw, dh){
+	}
+	
+	Background.prototype.drawTerrain = function (ctx){
+		this.BackgroundImage[0].draw(ctx, 0, 0, true);
+	}
+	
+	Background.prototype.drawFountainBase = function(ctx){
+		this.BackgroundImage[1].draw(ctx, 330, 1360, true);
+	}
+	
+	Background.prototype.drawFountainWater = function(ctx){
+		this.BackgroundImage[2 + this.FountainFrame].draw(ctx, 330, 1360, true);
+	}
+	
+	Background.prototype.drawHotelBase = function(ctx){
+		this.BackgroundImage[5].draw(ctx, 0, 0, true);
+	}
+	
+	Background.prototype.drawHotelOver = function(ctx){
+		this.BackgroundImage[6].draw(ctx, 0, 0, true);
+	}
+	
+	Background.prototype.drawHotelDoor = function(ctx){
+	}
+	
+	var MyBackground = new Background();
+	MyBackground.init();
+	
+/***********************************
+***[3]The Actual Game + Its Function***
+************************************/
+		
+	function LoadImage(img) {
+        FloorTexture.push(new Sprite(img, 0, 0, 127, 63));
+		FloorTexture.push(new Sprite(img, 128, 0, 127, 63));
+		FloorTexture.push(new Sprite(img, 128, 64, 127, 63));
+		
+		WallTexture.push(new Sprite(img, 128, 320, 127, 191));
+		WallTexture.push(new Sprite(img, 256, 320, 127, 191));
+		WallTexture.push(new Sprite(img, 256, 256, 21, 9));
+		
+		WallTexture.push(new Sprite(img, 640, 384, 127, 191));
+		WallTexture.push(new Sprite(img, 768, 384, 127, 191));
+		//WallTexture.push(new Sprite(img, 256, 256, 21, 9));
+		
+		WallObjectTexture.push(new Sprite(img, 384, 320, 127, 191));
+		WallObjectTexture.push(new Sprite(img, 512, 320, 127, 191));
+		WallObjectTexture.push(new Sprite(img, 128, 512, 127, 191));
+		WallObjectTexture.push(new Sprite(img, 256, 512, 127, 191));
+    };
+
+	function LoadSprite(name, wid, hei, list){
+		var img = new Image();
+		img.src = name;
+		list.push(new Sprite(img, 0, 0, wid, hei));
+	};
+
+    function LoadData() {
+        FloorTileList.push(new FloorTile(0));
+		FloorTileList.push(new FloorTile(1));
+		FloorTileList.push(new FloorTile(2));
+		
+		WallTileList.push(new WallTile(1, 0));
+		WallTileList.push(new WallTile(2, 2));
+		WallTileList.push(new WallTile(3, 4));
+		
+		WallObjectList.push(new DoorObject(0, 1, 2, 3));
+		
+		BodyList.push(new SpriteBody(0));
+		TopList.push(new SpriteTop(0));
+    };
+	
+	function onMouseDown(evt){
+		var canvasbox = GameScreen.Screen.canvas.getBoundingClientRect();
+		MouseX = (evt.clientX - canvasbox.left)*(GameScreen.Screen.canvas.width/canvasbox.width);
+		MouseY = (evt.clientY - canvasbox.top)*(GameScreen.Screen.canvas.height/canvasbox.height);
+		switch (StateManager.State){
+			case 0:
+				Dragging = false;
+				
+		
+				// Check if hit GUIs Object
+		
+				// If not, check if hit map objects
+		
+				// If not then it must be non clickable object -> Drag
+		
+				Dragging = true;
+				if (Dragging){
+					GameScreen.Screen.canvas.addEventListener("mousemove", onDragMouseMove, false);
+				}
+		
+				GameScreen.Screen.canvas.removeEventListener("mousedown", onMouseDown, false);
+				GameScreen.Screen.canvas.addEventListener("mouseup", onMouseUp, false);
+		
+				//code below prevents the mouse down from having an effect on the main browser window:
+				if (evt.preventDefault) {
+					evt.preventDefault();
+				} //standard
+				else if (evt.returnValue) {
+					evt.returnValue = false;
+				} //older IE
+				return false;
+				break;
+			case 1:
+				GameScreen.Screen.canvas.removeEventListener("mousedown", onMouseDown, false);
+				GameScreen.Screen.canvas.addEventListener("mouseup", onMouseUp, false);
+				
+				break;
+			case 2:
+				var clickx = ;
+				var clicky;
+				break;
+		}
+	}
+	
+	function onMouseUp(evt)
+	{
+		GameScreen.Screen.canvas.addEventListener("mousedown", onMouseDown, false);
+		GameScreen.Screen.canvas.removeEventListener("mouseup", onMouseUp, false);
+		switch (StateManager.State){
+			case 0:
+				if (Dragging) {
+					Dragging = false;
+					GameScreen.Screen.canvas.removeEventListener("mousemove", onDragMouseMove, false);
+					GameCamera.OldStartX = GameCamera.StartX;
+					GameCamera.OldStartY = GameCamera.StartY;
+				}
+				break;
+			case 1:
+				var button = StateManager.getButtonFromClick(MouseX, MouseY);
+				if (button instanceof GUIButton){
+					button.clicked();
+				}
+				break;
+		}
+	}
+	
+	function onDragMouseMove(evt)
+	{
+		switch (StateManager.State){
+			case 0:
+				var posX;
+				var posY;
+				
+				//getting mouse position correctly 
+				var canvasbox = GameScreen.Screen.canvas.getBoundingClientRect();
+				posX = (evt.clientX - canvasbox.left)*(GameScreen.Screen.canvas.width/canvasbox.width);
+				posY = (evt.clientY - canvasbox.top)*(GameScreen.Screen.canvas.height/canvasbox.height);
+				
+				GameCamera.StartX = GameCamera.OldStartX - (posX - MouseX);
+				GameCamera.StartY = GameCamera.OldStartY - (posY - MouseY);
+				
+				if (GameCamera.StartX < 0){
+					GameCamera.StartX = 0;
+				}
+				if (GameCamera.StartY < 0){
+					GameCamera.StartY = 0;
+				}
+				if (GameCamera.StartX > MapWidth - ScreenWidth){
+					GameCamera.StartX = MapWidth - ScreenWidth;
+				}
+				if (GameCamera.StartY > MapHeight - ScreenHeight){
+					GameCamera.StartY = MapHeight - ScreenHeight;
+				}
+				break;
+		}
+	}
+	
+	var StateManager = {
+		State: 1,
+		StateSpecificIndex: 0,
+		GUIList: [],
+		
+		init: function(){
+			var g = new GUI(0, 0, 0, 600, 600);
+			var gb = new GUIButton(0, 0, 0, 0, 0);
+			g.init = function(){
+				gb = new GUIButton(0, 30, 30, 125, 50);
+				gb.clicked = function(){
+					StateManager.State = 0;
+				}
+				g.ButtonList.push(gb);
+			}
+			g.init();
+			g.draw = function(ctx){
+				for (var i = 0; i < g.ButtonList.length; i++){
+					g.ButtonList[i].draw(ctx);
+				}
+			}
+			
+			this.GUIList.push(g);
+		},
+		
+		ChangeState: function(id){
+			this.State = id;
+			this.StateSpecificIndex = 0;
+		},
+		
+		draw: function(ctx, screenw, screenh){
+			switch (this.State){
+				case 0:
+					GameScreen.Screen.ctx.clearRect(0,0,screenw, screenh);
+					MyBackground.drawTerrain(ctx);
+					MyBackground.drawFountainBase(ctx);
+					MyBackground.drawFountainWater(ctx);
+					MyBackground.drawHotelBase(ctx);
+					MyBackground.drawHotelOver(ctx);
+					MyRestaurant.draw(ctx, true);
+					Test.draw(ctx, true);
+					break;
+				case 1:
+					MyBackground.drawMainMenu(ctx);
+					this.GUIList[0].draw(ctx);
+					break;
+			}
+		},
+		
+		getButtonFromClick: function(x, y){
+			switch (this.State){
+				case 0:
+					break;
+				case 1:
+					switch (this.StateSpecificIndex){
+						case 0:
+							if (x > this.GUIList[0].X && x < this.GUIList[0].X + this.GUIList[0].Width && y > this.GUIList[0].Y && y < this.GUIList[0].Y + this.GUIList[0].Height){
+								for (var i = 0; i < this.GUIList[0].ButtonList.length; i++){
+									if (x > this.GUIList[0].ButtonList[i].X && x < this.GUIList[0].ButtonList[i].X + this.GUIList[0].ButtonList[i].Width && y > this.GUIList[0].ButtonList[i].Y && y < this.GUIList[0].ButtonList[i].Y + this.GUIList[0].ButtonList[i].Height){
+										return this.GUIList[0].ButtonList[i];
+									}
+								}
+							}
+							break;
+						case 1:
+							break;
+					}
+					break;
+			}
+		}
+	}
+
+    var GameScreen = {
+        screen: function (canvas, w, h) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext("2d");
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.border = "1px solid #000";
+        },
+        init: function () {
+            var canvas = document.createElement("canvas");
+			canvas.draggable = true;
+            document.body.appendChild(canvas);
+			
+			canvas.addEventListener("mousedown", onMouseDown, false);
+			
+			ScreenWidth = window.innerWidth - 30, ScreenHeight = window.innerHeight - 30;
+            var w = window.innerWidth, h = window.innerHeight;
+			if (w > ScreenWidth){
+				w = ScreenWidth;
+			}
+			if (h > ScreenHeight){
+				h = ScreenHeight;
+			}
+            GameScreen.Screen = new GameScreen.screen(canvas, w, h);
+            //LoadSprite("http://i.imgur.com/n11EtKS.png", 384, 748, BodyTexture);
+			//LoadSprite("http://i.imgur.com/2vCdO5q.png", 384, 748, TopTexture);
+			
+			LoadSprite("Resource/Body 1.png", 384, 748, BodyTexture);
+			LoadSprite("Resource/M Shirt 1.png", 384, 748, TopTexture);
+			LoadSprite("Resource/NewGameButton.png", 125, 50, GUIButtonTexture);
+			LoadData();
+			StateManager.init();
+            var img = new Image();
+            img.onload = function () {
+                LoadImage(this);
+                GameScreen.run();
+            }
+            //img.src = "http://i.imgur.com/ytgGECr.png";
+
+			img.src = "Resource/Base.png";
+        },
+        run: function () {
+            var loop = function () {
+                GameScreen.update();
+                GameScreen.render();
+                window.requestAnimationFrame(loop, this.canvas);
+            }
+            window.requestAnimationFrame(loop, this.canvas);
+        },
+        render: function () {
+			StateManager.draw(GameScreen.Screen.ctx, GameScreen.Screen.canvas.width, GameScreen.Screen.canvas.height);
+        },
+        update: function () {
+			MyBackground.update();
+			Test.update();
+        }
+    }
+    GameScreen.init();
+
+</script>
+</body>
+</html>
